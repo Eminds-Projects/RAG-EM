@@ -147,7 +147,8 @@ Answer:
                 "role": "user",
                 "content": prompt
             }
-        ]
+        ],
+        options={"temperature": 0}
     )
 
     print("\nAnswer:")
