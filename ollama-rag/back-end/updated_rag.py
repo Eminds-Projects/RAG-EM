@@ -101,21 +101,25 @@ def retrieve_context(question, top_k=5):
 
     results = collection.query(
         query_embeddings=[question_embedding],
-        n_results=top_k
+        n_results=top_k,
+        include=["documents", "metadatas", "distances"]
     )
 
     chunks = results["documents"][0]
     sources = results["metadatas"][0]
+    distances = results["distances"][0]
 
     context = ""
+    filtered_sources = []
 
-    for chunk, source in zip(chunks, sources):  
-        context += f"\nSource: {source['source']}\n"
-        context += chunk
-        context += "\n---\n"
+    for chunk, source, distance in zip(chunks, sources, distances):
+        if distance < 1.0:  # only include relevant chunks
+            context += f"\nSource: {source['source']}\n"
+            context += chunk
+            context += "\n---\n"
+            filtered_sources.append(source)
 
-    return context, sources
-
+    return context, filtered_sources
 
 def ask_question(question):
     context, sources = retrieve_context(question)
@@ -152,7 +156,7 @@ Answer:
     print("\nSources used:")
     shown_sources = set()
     for source in sources:
-        source_key = f"{source['source']} (page {source.get('page', 'N/A')})"
+        source_key = f"{source['source']} (page {source.get('page', 0) + 1})"
         if source_key not in shown_sources:
             print("-", source_key)
             shown_sources.add(source_key)
