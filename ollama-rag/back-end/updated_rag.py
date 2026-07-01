@@ -152,9 +152,10 @@ Answer:
     print("\nSources used:")
     shown_sources = set()
     for source in sources:
-        if source["source"] not in shown_sources:
-            print("-", source["source"])
-            shown_sources.add(source["source"])
+        source_key = f"{source['source']} (page {source.get('page', 'N/A')})"
+        if source_key not in shown_sources:
+            print("-", source_key)
+            shown_sources.add(source_key)
 
 
 def main():
