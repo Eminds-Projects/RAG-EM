@@ -33,7 +33,7 @@ app.add_middleware(
 
 
 class QuestionRequest(BaseModel):
-    question: str
+    message: str
 
 
 # --- RAG functions (same as updated_rag.py) ---
@@ -139,12 +139,12 @@ def retrieve_context(question, top_k=5):
 
 # --- API endpoints ---
 
-@app.get("/")
+@app.get("/api/health")
 def home():
     return {"message": "Ollama RAG API is running"}
 
 
-@app.post("/upload")
+@app.post("/api/documents/upload")
 async def upload_files(files: list[UploadFile] = File(...)):
     Path(DOCUMENTS_DIR).mkdir(exist_ok=True)
     filenames = []
@@ -164,9 +164,9 @@ async def upload_files(files: list[UploadFile] = File(...)):
         "chunks_indexed": total
     }
 
-@app.post("/ask")
-def ask(request: QuestionRequest):
-    context, sources = retrieve_context(request.question)
+@app.post("/api/chat/send")
+def send(request: QuestionRequest):
+    context, sources = retrieve_context(request.message)
 
     if not context:
         return {
@@ -185,7 +185,7 @@ Document context:
 {context}
 
 Question:
-{request.question}
+{request.message}
 
 Answer:
 """
@@ -208,6 +208,8 @@ Answer:
             seen.add(source_key)
 
     return {
+
+        "role": "assistant",
         "answer": response["message"]["content"],
         "sources": unique_sources
     }
